@@ -393,3 +393,29 @@ SteamCommunity.prototype.uploadAvatar = function(image, format, callback) {
 		}, "steamcommunity");
 	}
 };
+
+SteamCommunity.prototype.getProfilePrivacySettings = function (callback) {
+    this._myProfile("edit/settings", null, (err, response, body) => {
+        if(err || response.statusCode != 200) {
+			if (callback) {
+				callback(err || new Error("HTTP error " + response.statusCode));
+			}
+
+			return;
+    	}
+
+		var $ = Cheerio.load(body);
+		var existingSettings = $('.ProfileReactRoot[data-privacysettings]').data('privacysettings');
+		if (!existingSettings) {
+			if (callback) {
+				callback(new Error("Malformed response"));
+			}
+
+			return;
+		}
+
+		// PrivacySettings => {PrivacyProfile, PrivacyInventory, PrivacyInventoryGifts, PrivacyOwnedGames, PrivacyPlaytime}
+		// eCommentPermission
+		callback(existingSettings.PrivacySettings);
+	});
+};
